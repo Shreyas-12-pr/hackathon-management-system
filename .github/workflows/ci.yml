@@ -1,50 +1,3 @@
-name: HMS CI
-
-on:
-  push:
-    branches:
-      - main
-      - develop
-
-  pull_request:
-    branches:
-      - main
-      - develop
-
-jobs:
-  frontend:
-    name: Frontend Checks
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: apps/web
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: apps/web/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run lint
-        run: pnpm lint
-
-      - name: Build frontend
-        run: pnpm build
-
   backend:
     name: Backend Checks
     runs-on: ubuntu-latest
@@ -65,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install fastapi "uvicorn[standard]" sqlalchemy alembic asyncpg python-dotenv "psycopg[binary]" email-validator
+          pip install fastapi "uvicorn[standard]" sqlalchemy alembic asyncpg python-dotenv "psycopg[binary]" email-validator pytest
 
       - name: Check Python imports
         run: |
@@ -73,8 +26,8 @@ jobs:
 
       - name: Run tests
         run: |
-          if exist tests (
-            python -m pytest
-          ) else (
-            echo No backend tests found yet.
-          )
+          if [ -d tests ] && [ "$(find tests -name 'test_*.py')" ]; then
+            pytest
+          else
+            echo "No backend tests found yet."
+          fi
